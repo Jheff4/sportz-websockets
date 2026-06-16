@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: sportz-api
+    runtime: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: ARCJET_KEY
+        sync: false
+      - key: PORT
+        value: 8000
