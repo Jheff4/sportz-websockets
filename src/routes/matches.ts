@@ -5,11 +5,11 @@ import {
   MATCH_STATUS,
   type CreateMatchInput,
   type ListMatchesQuery,
-} from "../validation/matches.js";
-import {matches} from "../db/schema.js";
-import {db} from "../db/db.js";
-import {getMatchStatus} from "../utils/match-status.js";
-import {desc} from "drizzle-orm";
+} from '../validation/matches.js';
+import { matches } from '../db/schema.js';
+import { db } from '../db/db.js';
+import { getMatchStatus } from '../utils/match-status.js';
+import { desc } from 'drizzle-orm';
 
 export const matchRouter = Router();
 
@@ -19,7 +19,7 @@ matchRouter.get('/', async (req: Request, res: Response) => {
   const parsed = listMatchesQuerySchema.safeParse(req.query);
 
   if (!parsed.success) {
-    return res.status(400).json({error: 'Invalid query.', details: parsed.error.issues });
+    return res.status(400).json({ error: 'Invalid query.', details: parsed.error.issues });
   }
 
   const { limit }: ListMatchesQuery = parsed.data;
@@ -29,43 +29,46 @@ matchRouter.get('/', async (req: Request, res: Response) => {
     const data = await db
       .select()
       .from(matches)
-      .orderBy((desc(matches.createdAt)))
-      .limit(resolvedLimit)
+      .orderBy(desc(matches.createdAt))
+      .limit(resolvedLimit);
 
     res.json({ data });
-  } catch (e) {
+  } catch {
     res.status(500).json({ error: 'Failed to list matches.' });
   }
-})
+});
 
 matchRouter.post('/', async (req: Request, res: Response) => {
   const parsed = createMatchSchema.safeParse(req.body);
 
-  if(!parsed.success) {
+  if (!parsed.success) {
     return res.status(400).json({ error: 'Invalid payload.', details: parsed.error.issues });
   }
 
   const { startTime, endTime, homeScore, awayScore }: CreateMatchInput = parsed.data;
 
   try {
-    const [event] = await db.insert(matches).values({
-      ...parsed.data,
-      startTime: new Date(startTime),
-      endTime: new Date(endTime),
-      homeScore: homeScore ?? 0,
-      awayScore: awayScore ?? 0,
-      status: getMatchStatus(startTime, endTime) ?? MATCH_STATUS.SCHEDULED,
-    }).returning();
+    const [event] = await db
+      .insert(matches)
+      .values({
+        ...parsed.data,
+        startTime: new Date(startTime),
+        endTime: new Date(endTime),
+        homeScore: homeScore ?? 0,
+        awayScore: awayScore ?? 0,
+        status: getMatchStatus(startTime, endTime) ?? MATCH_STATUS.SCHEDULED,
+      })
+      .returning();
 
-    if(res.app.locals.broadcastMatchCreated) {
+    if (res.app.locals.broadcastMatchCreated) {
       res.app.locals.broadcastMatchCreated(event);
     }
 
     res.status(201).json({ data: event });
-  } catch (e) {
-    res.status(500).json({ error: 'Failed to create match.', details: JSON.stringify(e) });
+  } catch {
+    res.status(500).json({ error: 'Failed to create match.' });
   }
-})
+});
 
 // matchRouter.patch('/:id/score', async (req: Request, res: Response) => {
 //     const paramsParsed = matchIdParamSchema.safeParse(req.params);

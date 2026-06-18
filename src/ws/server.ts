@@ -82,7 +82,8 @@ function handleMessage(socket: SportzSocket, data: RawData): void {
     message === null ||
     !('type' in message) ||
     !('matchId' in message)
-  ) return;
+  )
+    return;
 
   const { type, matchId } = message as { type: unknown; matchId: unknown };
 
@@ -145,7 +146,9 @@ export function attachWebSocketServer(server: http.Server) {
     ws.isAlive = true;
     ws.subscriptions = new Set();
 
-    ws.on('pong', () => { ws.isAlive = true; });
+    ws.on('pong', () => {
+      ws.isAlive = true;
+    });
 
     sendJson(ws, { type: 'welcome' });
 
