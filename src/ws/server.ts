@@ -3,6 +3,7 @@ import { Duplex } from 'stream';
 import { RawData, WebSocket, WebSocketServer } from 'ws';
 import type { Commentary, Match } from '../db/schema.js';
 import { wsArcjet } from '../arcjet.js';
+import { logger } from '../utils/logger.js';
 
 // ─── Types ─────────────────────────────────────────
 
@@ -129,7 +130,7 @@ export function attachWebSocketServer(server: http.Server) {
           return;
         }
       } catch (e) {
-        console.error('WS upgrade protection error', e);
+        logger.error('WS upgrade protection error', { error: e });
         socket.write('HTTP/1.1 500 Internal Server Error\r\n\r\n');
         socket.destroy();
         return;

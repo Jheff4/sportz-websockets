@@ -1,5 +1,6 @@
-import arcjet, { detectBot, shield, slidingWindow } from "@arcjet/node";
-import { Request, Response, NextFunction } from "express";
+import arcjet, { detectBot, shield, slidingWindow } from '@arcjet/node';
+import { Request, Response, NextFunction } from 'express';
+import { logger } from './utils/logger.js';
 
 const arcjetKey = process.env.ARCJET_KEY;
 const arcjetMode = process.env.ARCJECT_MODE === 'DRY_RUN' ? 'DRY_RUN' : 'LIVE';
@@ -41,7 +42,7 @@ export function securityMiddleware() {
         return res.status(403).json({ error: 'Forbidden.' });
       }
     } catch (e) {
-      console.error('Arcjet middleware error', e);
+      logger.error('Arcjet middleware error', { error: e });
       return res.status(503).json({ error: 'Service Unavailable' });
     }
 

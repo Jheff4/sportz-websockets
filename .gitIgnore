@@ -6,3 +6,7 @@ dist/
 # APM runtime data
 apminsightdata
 apminsightnode.json
+
+# Logs
+logs/
+
