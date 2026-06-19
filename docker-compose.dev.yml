@@ -1,0 +1,85 @@
+# =============================================================================
+# docker-compose.dev.yml — Development environment
+# =============================================================================
+#
+# Runs two services:
+#
+#   neon-local   Neon Local proxy — talks to your Neon Cloud project and
+#                creates a fresh ephemeral database branch on startup.
+#                The branch is automatically deleted when the container stops.
+#                Exposes Postgres on host port 5432 so you can run
+#                drizzle-kit migrations from your local machine.
+#
+#   app          The Sportz API server — connects to neon-local over the
+#                shared Docker network using the service name as hostname.
+#
+# Usage:
+#   docker compose -f docker-compose.dev.yml up --build
+#   docker compose -f docker-compose.dev.yml down        # stops & deletes branch
+#
+# First-time setup:
+#   Fill in .env.development with your NEON_API_KEY, NEON_PROJECT_ID,
+#   and PARENT_BRANCH_ID before running. See DOCKER.md for details.
+# =============================================================================
+
+services:
+
+  # ── Neon Local proxy ─────────────────────────────────────────────────────────
+  neon-local:
+    image: neondatabase/neon_local:latest
+
+    container_name: sportz-neon-local
+
+    ports:
+      # 5432 on your host machine → 5432 inside the container.
+      # This lets drizzle-kit (running on your host, not in Docker) reach the
+      # ephemeral branch via localhost:5432.
+      - '5432:5432'
+
+    env_file:
+      - .env.development
+
+    volumes:
+      # Neon Local writes branch metadata here, keyed by your current Git branch.
+      # This lets it reuse the same ephemeral branch if you restart the container
+      # while on the same Git branch, instead of creating a new one each time.
+      - ./.neon_local:/app/.neon_local
+
+    healthcheck:
+      # Wait until Postgres inside neon-local is ready to accept connections.
+      # start_period gives Neon Local time to contact the API and create the branch.
+      test: ['CMD-SHELL', 'pg_isready -h localhost -p 5432 -U neon -d neondb']
+      interval: 5s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+
+  # ── Application ──────────────────────────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner         # use the lean production stage, not the builder
+
+    ports:
+      - '8000:8000'
+
+    env_file:
+      # Load all variables from .env.development.
+      # DATABASE_URL below overrides the one in this file to ensure the
+      # correct hostname ("neon-local") is always used inside Docker networking.
+      - .env.development
+
+    environment:
+      # Inside the Docker network, containers reach each other by service name.
+      # "neon-local" here is the service name defined above — not "localhost".
+      # (localhost inside the app container refers to the app container itself.)
+      DATABASE_URL: postgres://neon:npg@sportz-neon-local:5432/neondb?sslmode=require
+      DATABASE_SSL_REJECT_UNAUTHORIZED: 'false'
+
+    depends_on:
+      neon-local:
+        # Docker waits for neon-local's healthcheck to pass before starting app.
+        condition: service_healthy
+
+    restart: unless-stopped

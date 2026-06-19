@@ -1,0 +1,38 @@
+# =============================================================================
+# .dockerignore — files excluded from the Docker build context
+# =============================================================================
+# Docker sends every file in your project to the Docker daemon before building.
+# Listing things here stops that transfer for files we never need in the image.
+# Smaller context = faster builds.
+# =============================================================================
+
+# Dependencies — reinstalled inside the image via npm ci
+node_modules
+
+# Compiled output — rebuilt inside the image via tsc
+dist
+
+# Git history — never needed in an image
+.git
+.gitignore
+
+# Environment files — secrets must be injected at runtime, never baked in
+.env
+.env.*
+
+# Logs — generated at runtime, not needed at build time
+logs
+apminsightdata
+apminsightnode.json
+*.log
+
+# Docker files themselves — no need to copy compose files into the image
+docker-compose*.yml
+Dockerfile
+
+# Neon Local branch tracking directory
+.neon_local
+
+# Editor / OS noise
+.DS_Store
+*.swp

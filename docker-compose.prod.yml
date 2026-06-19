@@ -1,0 +1,46 @@
+# =============================================================================
+# docker-compose.prod.yml — Production environment
+# =============================================================================
+#
+# Runs only the application. There is no Neon Local proxy here — the app
+# connects directly to your Neon Cloud database via DATABASE_URL.
+#
+# Usage:
+#   cp .env.production.example .env.production   # first time only
+#   # fill in real values in .env.production
+#   docker compose -f docker-compose.prod.yml up --build -d
+#
+# NOTE: In a real production deployment you typically would not run
+# docker-compose directly on the server. You would push the image to a
+# registry (Docker Hub, ECR, GHCR) and deploy via Kubernetes, Railway,
+# Fly.io, Render, etc. This file is useful for smoke-testing the production
+# build locally before pushing.
+# =============================================================================
+
+services:
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+
+    ports:
+      - '8000:8000'
+
+    env_file:
+      # Load production secrets from .env.production.
+      # This file must exist but must never be committed to git.
+      # In CI/CD, inject environment variables directly instead of using this file.
+      - .env.production
+
+    restart: unless-stopped
+
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
