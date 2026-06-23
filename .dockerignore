@@ -22,8 +22,6 @@ dist
 
 # Logs — generated at runtime, not needed at build time
 logs
-apminsightdata
-apminsightnode.json
 *.log
 
 # Docker files themselves — no need to copy compose files into the image

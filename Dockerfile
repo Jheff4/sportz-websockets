@@ -57,13 +57,12 @@ RUN addgroup -S sportz && adduser -S sportz -G sportz
 #
 # WHY THIS IS NEEDED: everything copied via COPY above is owned by root.
 # logger.ts creates 'logs/error.log' and 'logs/combined.log' via Winston's
-# File transport whenever NODE_ENV !== 'production' — and apminsight writes
-# to 'apminsightdata/'. Without this chown, the 'sportz' user has no write
-# permission on /app, so winston's mkdir('logs') throws EACCES the instant
-# the process starts, crashing it immediately. With restart: unless-stopped
-# in docker-compose.dev.yml, that crash becomes an infinite restart loop —
-# exactly what was happening before this fix.
-RUN mkdir -p logs apminsightdata && chown -R sportz:sportz /app
+# File transport whenever NODE_ENV !== 'production'. Without this chown, the
+# 'sportz' user has no write permission on /app, so winston's mkdir('logs')
+# throws EACCES the instant the process starts, crashing it immediately. With
+# restart: unless-stopped in docker-compose.dev.yml, that crash becomes an
+# infinite restart loop — exactly what was happening before this fix.
+RUN mkdir -p logs && chown -R sportz:sportz /app
 
 USER sportz
 
