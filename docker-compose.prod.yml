@@ -23,7 +23,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: production
+      target: runner
 
     ports:
       - '8000:8000'

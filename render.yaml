@@ -1,15 +1,70 @@
+# =============================================================================
+# render.yaml — Render Blueprint for the Sportz API (Docker runtime)
+# =============================================================================
+# This is an Infrastructure-as-Code "Blueprint". Instead of clicking through
+# Render's dashboard to configure the service, Render reads this file from the
+# repo and provisions everything described here.
+#
+# runtime: docker → Render builds the Dockerfile in this repo and runs the
+# resulting image — the SAME multi-stage image you've been testing locally
+# with `dc-prod`/`dev:docker`. No "works locally, breaks in prod" drift.
+#
+# To deploy: Render Dashboard → New → Blueprint → connect this repo. Render
+# detects render.yaml automatically. Secrets marked `sync: false` are NOT
+# stored in git — you enter them once in the dashboard.
+# =============================================================================
+
 services:
   - type: web
     name: sportz-api
-    runtime: node
-    buildCommand: npm install && npm run build
-    startCommand: npm start
+    runtime: docker
+
+    # Build the production image from the repo's Dockerfile.
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+
+    # Free tier spins the service down after ~15 min idle and cold-starts on
+    # the next request (a few seconds' delay). Fine for a demo/portfolio API.
+    # Change to 'starter' for an always-on instance.
+    plan: free
+    region: oregon
+
+    # Render pings this path to decide if the service is healthy. The app's
+    # GET / route ("Sportz server is running!") is registered BEFORE the
+    # Arcjet security middleware, so health checks are never rate-limited or
+    # bot-blocked — exactly what you want for a health probe.
+    healthCheckPath: /
+
     envVars:
-      - key: NODE_ENV
-        value: production
+      # ── Secrets — entered in the Render dashboard, never committed ──────────
+      # DATABASE_URL: your Neon Cloud POOLED connection string
+      #   (Neon Console → Connect → Pooled connection). Must include
+      #   ?sslmode=require — Neon Cloud requires SSL, which db.ts honors by
+      #   default (DATABASE_SSL unset → SSL on, certs verified).
       - key: DATABASE_URL
         sync: false
+
+      # ARCJET_KEY: your production Arcjet key (ajkey_...)
       - key: ARCJET_KEY
         sync: false
+
+      # CORS_ORIGIN: your deployed frontend's URL, e.g.
+      #   https://sportz-ui.vercel.app  (comma-separate multiple origins).
+      # Until the frontend is deployed you can leave this unset, but then the
+      # API only allows requests from localhost:3000 (the code's fallback).
+      - key: CORS_ORIGIN
+        sync: false
+
+      # ── Non-secret config — safe to commit ─────────────────────────────────
+      - key: NODE_ENV
+        value: production
+
+      # The app reads process.env.PORT and binds it. EXPOSE 8000 in the
+      # Dockerfile matches this; Render routes external traffic to it.
       - key: PORT
-        value: 8000
+        value: "8000"
+
+      # Bind all interfaces (not localhost) so Render's proxy can reach the
+      # container. The app already defaults to 0.0.0.0, but explicit is safer.
+      - key: HOST
+        value: "0.0.0.0"
