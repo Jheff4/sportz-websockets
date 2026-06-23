@@ -180,5 +180,16 @@ export function attachWebSocketServer(server: http.Server) {
     broadcastToMatch(matchId, { type: 'commentary', data: comment });
   }
 
-  return { broadcastMatchCreated, broadcastCommentary };
+  // close() — stops the heartbeat interval and closes the WebSocketServer.
+  // WHY THIS EXISTS: without an explicit close(), the 30s heartbeat interval
+  // (and the wss instance itself) keep running indefinitely. In tests, this
+  // leaves a dangling timer that prevents the test process from exiting
+  // cleanly. In production, this is also what a graceful shutdown handler
+  // (e.g. on SIGTERM) needs to call before closing the HTTP server.
+  function close(): void {
+    clearInterval(interval);
+    wss.close();
+  }
+
+  return { broadcastMatchCreated, broadcastCommentary, close };
 }

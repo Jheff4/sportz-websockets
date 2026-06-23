@@ -1,0 +1,88 @@
+# =============================================================================
+# lint-and-format.yml — code quality gate
+# =============================================================================
+#
+# WHAT THIS DOES:
+# Runs ESLint and Prettier against every push/PR targeting main or staging.
+# Fails the workflow (blocking merge if branch protection is enabled) when
+# either tool finds problems — but always runs BOTH checks first so you see
+# every issue in one CI run, not one-at-a-time across multiple pushes.
+#
+# WHY continue-on-error + a final gate step:
+# By default, a failing step stops the job immediately. If lint fails, the
+# format:check step never runs — you push a fix, then discover formatting
+# is also broken on the next run. continue-on-error: true lets both steps
+# run regardless of outcome; the final "Evaluate results" step inspects both
+# outcomes and fails the job only after both have had a chance to report.
+# =============================================================================
+
+name: Lint and Format
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+    branches: [main, staging]
+
+jobs:
+  lint-and-format:
+    name: Lint and Format Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # actions/setup-node's built-in npm cache keys off package-lock.json.
+      # This caches ~/.npm between runs — `npm ci` on a cache hit takes
+      # seconds instead of ~30s+ for a cold install.
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      # npm ci (not npm install) — installs EXACTLY what's in package-lock.json.
+      # npm install can silently update lockfile-pinned versions; npm ci never
+      # does, and it's also faster because it skips dependency resolution.
+      - name: Install dependencies
+        run: npm ci
+
+      # continue-on-error means this step is recorded as failed, but the job
+      # keeps going. We read its outcome in the final gate step below.
+      - name: Run ESLint
+        id: lint
+        continue-on-error: true
+        run: npm run lint
+
+      - name: Run Prettier check
+        id: format
+        continue-on-error: true
+        run: npm run format:check
+
+      # ── Gate: fail the job now, with actionable annotations ───────────────
+      # ::error:: is a GitHub Actions workflow command. When emitted, it shows
+      # as a red annotation directly on the PR's "Files changed" tab and in
+      # the workflow summary — not buried in raw log output.
+      - name: Evaluate results
+        if: steps.lint.outcome == 'failure' || steps.format.outcome == 'failure'
+        run: |
+          if [ "${{ steps.lint.outcome }}" == "failure" ]; then
+            echo "::error title=ESLint failed::Run 'npm run lint:fix' locally to auto-fix what's fixable, then commit the result."
+          fi
+          if [ "${{ steps.format.outcome }}" == "failure" ]; then
+            echo "::error title=Prettier check failed::Run 'npm run format' locally to auto-format your files, then commit the result."
+          fi
+          echo "## ❌ Lint/Format check failed" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Check | Result |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---|---|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| ESLint | ${{ steps.lint.outcome == 'failure' && '❌ Failed' || '✅ Passed' }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Prettier | ${{ steps.format.outcome == 'failure' && '❌ Failed' || '✅ Passed' }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Run \`npm run lint:fix\` and/or \`npm run format\` locally, then push again." >> "$GITHUB_STEP_SUMMARY"
+          exit 1
+
+      - name: All checks passed
+        if: steps.lint.outcome == 'success' && steps.format.outcome == 'success'
+        run: echo "## ✅ Lint and format checks passed" >> "$GITHUB_STEP_SUMMARY"

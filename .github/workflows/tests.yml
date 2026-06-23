@@ -1,0 +1,142 @@
+# =============================================================================
+# tests.yml — automated test suite
+# =============================================================================
+#
+# WHAT THIS DOES:
+# Runs `npm test` against a real, ephemeral Postgres database on every push/PR
+# to main or staging. Uploads coverage as an artifact and writes a summary
+# table to the PR/workflow page.
+#
+# WHY A POSTGRES SERVICE CONTAINER INSTEAD OF NEON:
+# This project uses Neon in dev/prod, but for CI we use a plain `postgres:16`
+# service container instead of a real Neon branch. Reasons:
+#   1. Speed — no network round-trip to Neon's API to provision a branch.
+#   2. Cost  — doesn't consume your Neon project's compute/branch quota on
+#      every single push.
+#   3. Determinism — the container starts completely empty every run, so
+#      tests can never be polluted by leftover data from a previous run.
+#   4. No secrets needed — works on forks and external contributor PRs too,
+#      where a Neon API key secret wouldn't be available anyway.
+#
+# WHY NODE_OPTIONS=--experimental-vm-modules:
+# package.json declares "type": "module" (native ESM). If the test runner is
+# Jest, its ESM support is still gated behind this flag — without it, Jest
+# fails to load .ts test files that use import/export syntax. (If/when this
+# project switches to Vitest, this flag becomes unnecessary — Vitest has
+# native ESM support — but it's harmless to leave in either way.)
+#
+# WHY coverage retention is exactly 30 days:
+# GitHub's artifact storage isn't free indefinitely — 30 days is long enough
+# to debug a regression reported weeks later, short enough not to accumulate
+# storage costs across hundreds of CI runs.
+# =============================================================================
+
+name: Tests
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+    branches: [main, staging]
+
+jobs:
+  test:
+    name: Run Test Suite
+    runs-on: ubuntu-latest
+
+    # Service containers run alongside the job's main container, on the same
+    # Docker network, reachable at the service name as hostname (here:
+    # "postgres" — matching DATABASE_URL below).
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: sportz_test
+          POSTGRES_PASSWORD: sportz_test
+          POSTGRES_DB: sportz_test
+        ports:
+          - 5432:5432
+        # Wait for Postgres to actually accept connections before the job
+        # proceeds — without this, the test step could start before the DB
+        # is ready and every test would fail with ECONNREFUSED.
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      NODE_ENV: test
+      NODE_OPTIONS: --experimental-vm-modules
+      DATABASE_URL: postgresql://sportz_test:sportz_test@localhost:5432/sportz_test
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Apply the schema to the fresh test database before tests run.
+      # Without this, every test hitting the DB fails with "relation does
+      # not exist" since the service container starts with an empty database.
+      - name: Run database migrations
+        run: npm run db:migrate
+
+      - name: Run tests
+        id: test
+        run: npm test
+
+      # Always upload, even if tests failed — coverage from a failing run is
+      # still useful to see which lines were/weren't exercised before the
+      # failure. `if: always()` overrides the default "only on success".
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 30
+          if-no-files-found: warn
+
+      # Step summary — renders as Markdown directly on the workflow run page.
+      # Tries to read a coverage-summary.json (produced by Jest/Vitest's
+      # "json-summary" coverage reporter) for a real total %. Falls back
+      # gracefully if that file doesn't exist yet.
+      - name: Generate test summary
+        if: always()
+        run: |
+          echo "## 🧪 Test Results" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "${{ steps.test.outcome }}" == "success" ]; then
+            echo "✅ **All tests passed**" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "❌ **Tests failed** — see annotations above and logs below" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+
+          if [ -f coverage/coverage-summary.json ]; then
+            PCT=$(node -e "console.log(require('./coverage/coverage-summary.json').total.lines.pct)")
+            echo "**Line coverage:** ${PCT}%" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "_No coverage-summary.json found — enable the json-summary coverage reporter to see a % here._" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      # Annotations for failures — most modern test runners can emit GitHub
+      # Actions-native annotations (::error file=...,line=...::) directly:
+      #   Vitest → built-in 'github-actions' reporter
+      #   Jest   → 'jest-github-actions-reporter' (community package)
+      # Configure one of these in your test runner config so failing
+      # assertions show up as inline red annotations on the diff, not just
+      # in raw log text.
+      - name: Fail job if tests failed
+        if: steps.test.outcome == 'failure'
+        run: exit 1

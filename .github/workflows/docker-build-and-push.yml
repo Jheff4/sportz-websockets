@@ -1,0 +1,117 @@
+# =============================================================================
+# docker-build-and-push.yml — build and publish the production image
+# =============================================================================
+#
+# WHAT THIS DOES:
+# On every push to main (or manually via workflow_dispatch), builds the
+# Dockerfile for both linux/amd64 and linux/arm64, tags it multiple ways,
+# and pushes to Docker Hub.
+#
+# WHY workflow_dispatch IN ADDITION TO push:
+# workflow_dispatch adds a "Run workflow" button in the GitHub Actions UI.
+# This lets you manually trigger a rebuild — e.g. to re-publish the same
+# code with a fresh "latest" tag, or to test the pipeline itself without
+# needing a new commit.
+#
+# WHY MULTI-PLATFORM (amd64 + arm64):
+# amd64 covers traditional cloud VMs (most Railway/Fly.io/EC2 instances).
+# arm64 covers Apple Silicon Macs (for local testing of the prod image) and
+# the growing number of ARM-based cloud instances (AWS Graviton, etc.) which
+# are often cheaper. Building both means the same image tag works everywhere
+# — Docker automatically pulls the right architecture's layer for the host
+# it's running on.
+#
+# WHY docker/setup-buildx-action IS REQUIRED FOR MULTI-PLATFORM:
+# The default Docker engine on a GitHub Actions runner only builds for its
+# own native architecture (amd64). Buildx adds QEMU-based emulation, which is
+# what makes it possible to build an arm64 image on an amd64 runner.
+# =============================================================================
+
+name: Docker Build and Push
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Enables multi-platform builds via QEMU emulation + the buildx
+      # builder (a more capable build engine than the classic Docker builder).
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # Generates a timestamp tag in the exact prod-YYYYMMDD-HHmmss format
+      # requested. This step runs in bash, computed once and reused below —
+      # computing it inline in the tags list would re-evaluate `date` at
+      # tag-generation time, which is fine here but less explicit/debuggable.
+      - name: Generate timestamp tag
+        id: timestamp
+        run: echo "value=prod-$(date -u +'%Y%m%d-%H%M%S')" >> "$GITHUB_OUTPUT"
+
+      # metadata-action computes a consistent set of tags + OCI labels from
+      # git context. Using it instead of hand-rolled bash avoids subtle bugs
+      # around branch names with slashes, PR vs push events, etc.
+      #
+      # Resulting tags for a push to main with commit abc1234:
+      #   yourname/sportz:main
+      #   yourname/sportz:sha-abc1234
+      #   yourname/sportz:latest
+      #   yourname/sportz:prod-20260621-143000   (appended manually below)
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKER_USERNAME }}/sportz
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix=sha-,format=short
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=${{ steps.timestamp.outputs.value }}
+
+      # The actual build. platforms triggers the multi-arch build via buildx.
+      # cache-from/cache-to with type=gha persists Docker layer cache in
+      # GitHub's Actions cache between runs — unchanged layers (e.g. npm ci,
+      # when package-lock.json hasn't changed) are reused instead of rebuilt.
+      - name: Build and push image
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Summary — shows exactly what was published, directly on the run page,
+      # without needing to scroll through raw build logs to find the tags.
+      - name: Append image summary
+        run: |
+          echo "## 🐳 Docker Image Published" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Image:** \`${{ secrets.DOCKER_USERNAME }}/sportz\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Platforms:** linux/amd64, linux/arm64" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Tags:**" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          echo "${{ steps.meta.outputs.tags }}" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Digest:** \`${{ steps.build.outputs.digest }}\`" >> "$GITHUB_STEP_SUMMARY"
