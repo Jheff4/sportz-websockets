@@ -19,11 +19,11 @@ import { vi } from 'vitest';
 // are mocked below anyway.
 // =============================================================================
 
-process.env.ARCJET_KEY    ??= 'test_arcjet_key_for_vitest';
-process.env.ARCJECT_MODE  ??= 'DRY_RUN';
-process.env.NODE_ENV      ??= 'test';
-process.env.DATABASE_URL  ??= 'postgresql://sportz_test:sportz_test@localhost:5432/sportz_test';
-process.env.CORS_ORIGIN   ??= 'http://localhost:3000';
+process.env.ARCJET_KEY ??= 'test_arcjet_key_for_vitest';
+process.env.ARCJET_MODE ??= 'DRY_RUN';
+process.env.NODE_ENV ??= 'test';
+process.env.DATABASE_URL ??= 'postgresql://sportz_test:sportz_test@localhost:5432/sportz_test';
+process.env.CORS_ORIGIN ??= 'http://localhost:3000';
 
 // The default DATABASE_URL above points at a plain `postgres:16-alpine`
 // container (see DOCKER.md / the test-running instructions) — not Neon.
@@ -31,7 +31,7 @@ process.env.CORS_ORIGIN   ??= 'http://localhost:3000';
 // not to attempt an SSL handshake against it. If you point DATABASE_URL at
 // a real Neon database instead, set DATABASE_SSL=true (or unset this) before
 // running tests.
-process.env.DATABASE_SSL  ??= 'false';
+process.env.DATABASE_SSL ??= 'false';
 
 // =============================================================================
 // Mock @arcjet/node entirely.
@@ -58,8 +58,8 @@ vi.mock('@arcjet/node', () => {
     default: vi.fn(() => ({
       protect: vi.fn().mockResolvedValue(allowDecision),
     })),
-    detectBot:     vi.fn(() => ({})),
-    shield:        vi.fn(() => ({})),
+    detectBot: vi.fn(() => ({})),
+    shield: vi.fn(() => ({})),
     slidingWindow: vi.fn(() => ({})),
   };
 });

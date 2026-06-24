@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "sportz-docs",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-c", "cd /Users/etinosa/Tech/react/sportz-docs && mint dev --port 3399"],
+      "port": 3399
+    }
+  ]
+}

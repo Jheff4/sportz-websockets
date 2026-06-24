@@ -39,17 +39,17 @@ The WebSocket server and REST API share a **single HTTP server instance**. Upgra
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Runtime | Node.js 22, TypeScript 6 |
-| HTTP Framework | Express 5 |
-| WebSocket | `ws` — lightweight, no abstraction overhead |
-| Database | Neon (serverless PostgreSQL) |
-| ORM | Drizzle ORM — type-safe, zero overhead |
-| Validation | Zod 4 |
-| Security | Arcjet — rate limiting, bot detection, shield |
-| Build | `tsc` → `dist/` |
-| Dev Server | `tsx --watch` |
+| Layer          | Technology                                    |
+| -------------- | --------------------------------------------- |
+| Runtime        | Node.js 22, TypeScript 6                      |
+| HTTP Framework | Express 5                                     |
+| WebSocket      | `ws` — lightweight, no abstraction overhead   |
+| Database       | Neon (serverless PostgreSQL)                  |
+| ORM            | Drizzle ORM — type-safe, zero overhead        |
+| Validation     | Zod 4                                         |
+| Security       | Arcjet — rate limiting, bot detection, shield |
+| Build          | `tsc` → `dist/`                               |
+| Dev Server     | `tsx --watch`                                 |
 
 ---
 
@@ -86,11 +86,12 @@ Returns a paginated list of matches ordered by most recently created.
 
 **Query params**
 
-| Param | Type | Default | Description |
-|---|---|---|---|
-| `limit` | `number` | `50` | Max results (1–100) |
+| Param   | Type     | Default | Description         |
+| ------- | -------- | ------- | ------------------- |
+| `limit` | `number` | `50`    | Max results (1–100) |
 
 **Response `200`**
+
 ```json
 {
   "data": [
@@ -119,6 +120,7 @@ Creates a new match. Status (`scheduled` | `live` | `finished`) is derived autom
 Broadcasts a `match_created` event to all connected WebSocket clients.
 
 **Request body**
+
 ```json
 {
   "sport": "football",
@@ -132,6 +134,7 @@ Broadcasts a `match_created` event to all connected WebSocket clients.
 ```
 
 **Response `201`**
+
 ```json
 { "data": { ...match } }
 ```
@@ -146,11 +149,12 @@ Returns commentary events for a match, ordered by most recent first.
 
 **Query params**
 
-| Param | Type | Default | Description |
-|---|---|---|---|
-| `limit` | `number` | `100` | Max results (1–100) |
+| Param   | Type     | Default | Description         |
+| ------- | -------- | ------- | ------------------- |
+| `limit` | `number` | `100`   | Max results (1–100) |
 
 **Response `200`**
+
 ```json
 {
   "data": [
@@ -179,6 +183,7 @@ Returns commentary events for a match, ordered by most recent first.
 Inserts a new commentary event for a match and broadcasts it in real time to all WebSocket clients subscribed to that match.
 
 **Request body**
+
 ```json
 {
   "minute": 23,
@@ -193,6 +198,7 @@ Inserts a new commentary event for a match and broadcasts it in real time to all
 ```
 
 **Response `201`**
+
 ```json
 { "data": { ...commentaryEvent } }
 ```
@@ -206,27 +212,30 @@ Connect to `ws://localhost:8000/ws`.
 ### Client → Server messages
 
 #### Subscribe to a match
+
 ```json
 { "type": "subscribe", "matchId": 1 }
 ```
 
 #### Unsubscribe from a match
+
 ```json
 { "type": "unsubscribe", "matchId": 1 }
 ```
 
 ### Server → Client messages
 
-| `type` | Trigger | Sent to |
-|---|---|---|
-| `welcome` | On connection | That client only |
-| `subscribed` | After subscribe | That client only |
-| `unsubscribed` | After unsubscribe | That client only |
-| `match_created` | `POST /matches` | All connected clients |
-| `commentary` | `POST /matches/:id/commentary` | Subscribers of that match only |
-| `error` | Invalid JSON received | That client only |
+| `type`          | Trigger                        | Sent to                        |
+| --------------- | ------------------------------ | ------------------------------ |
+| `welcome`       | On connection                  | That client only               |
+| `subscribed`    | After subscribe                | That client only               |
+| `unsubscribed`  | After unsubscribe              | That client only               |
+| `match_created` | `POST /matches`                | All connected clients          |
+| `commentary`    | `POST /matches/:id/commentary` | Subscribers of that match only |
+| `error`         | Invalid JSON received          | That client only               |
 
 #### Example `commentary` event
+
 ```json
 {
   "type": "commentary",
@@ -307,7 +316,7 @@ ARCJET_KEY="ajkey_xxx"
 # Optional
 PORT=8000
 HOST=0.0.0.0
-ARCJECT_MODE=DRY_RUN   # set to LIVE in production
+ARCJET_MODE=DRY_RUN   # set to LIVE in production
 ```
 
 ### 3. Run database migrations
@@ -330,13 +339,13 @@ WebSocket server at `ws://localhost:8000/ws`.
 
 ## Scripts
 
-| Script | Description |
-|---|---|
-| `npm run dev` | Start with hot reload (`tsx --watch`) |
-| `npm run build` | Compile TypeScript → `dist/` |
-| `npm start` | Run compiled output (`node dist/index.js`) |
-| `npm run db:generate` | Generate Drizzle migration from schema |
-| `npm run db:migrate` | Apply pending migrations to the database |
+| Script                | Description                                |
+| --------------------- | ------------------------------------------ |
+| `npm run dev`         | Start with hot reload (`tsx --watch`)      |
+| `npm run build`       | Compile TypeScript → `dist/`               |
+| `npm start`           | Run compiled output (`node dist/index.js`) |
+| `npm run db:generate` | Generate Drizzle migration from schema     |
+| `npm run db:migrate`  | Apply pending migrations to the database   |
 
 ---
 
@@ -361,7 +370,7 @@ All HTTP and WebSocket traffic passes through [Arcjet](https://arcjet.com):
 - **Bot detection** — blocks unwanted automated traffic (search engines and preview bots are allowed)
 - **Rate limiting** — sliding window: 50 requests / 10s on HTTP, 5 connections / 2s on WebSocket upgrades
 
-Set `ARCJECT_MODE=DRY_RUN` to log decisions without blocking — useful during development.
+Set `ARCJET_MODE=DRY_RUN` to log decisions without blocking — useful during development.
 
 ---
 
