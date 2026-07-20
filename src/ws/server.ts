@@ -180,6 +180,13 @@ export function attachWebSocketServer(server: http.Server) {
     broadcastToMatch(matchId, { type: 'commentary', data: comment });
   }
 
+  // Scores are shown on the match card in EVERY client's grid, not just by the
+  // people watching that match's commentary — so a score update goes to all
+  // connected clients (unlike commentary, which is room-scoped).
+  function broadcastScoreUpdate(match: Match): void {
+    broadcastToAll(wss, { type: 'score_update', data: match });
+  }
+
   // close() — stops the heartbeat interval and closes the WebSocketServer.
   // WHY THIS EXISTS: without an explicit close(), the 30s heartbeat interval
   // (and the wss instance itself) keep running indefinitely. In tests, this
@@ -191,5 +198,5 @@ export function attachWebSocketServer(server: http.Server) {
     wss.close();
   }
 
-  return { broadcastMatchCreated, broadcastCommentary, close };
+  return { broadcastMatchCreated, broadcastCommentary, broadcastScoreUpdate, close };
 }

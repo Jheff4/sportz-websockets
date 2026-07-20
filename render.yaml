@@ -68,3 +68,10 @@ services:
       # container. The app already defaults to 0.0.0.0, but explicit is safer.
       - key: HOST
         value: "0.0.0.0"
+
+      # DEMO_MODE: run the in-process simulator so the deployed app is always
+      # "live" for visitors (generates commentary + score updates on an
+      # interval). This is what makes the portfolio demo work with no external
+      # producer. Set to "false" to disable. See src/demo/simulator.ts.
+      - key: DEMO_MODE
+        value: "true"
