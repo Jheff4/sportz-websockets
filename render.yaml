@@ -75,3 +75,13 @@ services:
       # producer. Set to "false" to disable. See src/demo/simulator.ts.
       - key: DEMO_MODE
         value: "true"
+
+      # NEW_RELIC_LICENSE_KEY: your New Relic ingest license key. Left unset,
+      # bootstrap.ts never imports the agent — the server runs exactly as
+      # before. Set it to turn on backend APM (errors + traces), matching the
+      # New Relic browser agent already wired on the frontend.
+      - key: NEW_RELIC_LICENSE_KEY
+        sync: false
+
+      - key: NEW_RELIC_APP_NAME
+        value: sportz-backend

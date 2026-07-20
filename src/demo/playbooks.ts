@@ -70,27 +70,45 @@ export const PLAYBOOKS: Record<string, Playbook> = {
     chatter: [
       {
         eventType: 'CORNER',
-        templates: ['{player} wins a corner for {team}.', 'Corner to {team} — {player} to swing it in.'],
+        templates: [
+          '{player} wins a corner for {team}.',
+          'Corner to {team} — {player} to swing it in.',
+        ],
       },
       {
         eventType: 'FOUL',
-        templates: ['Crunching challenge on {player}, free kick {team}.', '{player} is bundled over — {team} free kick.'],
+        templates: [
+          'Crunching challenge on {player}, free kick {team}.',
+          '{player} is bundled over — {team} free kick.',
+        ],
       },
       {
         eventType: 'OFFSIDE',
-        templates: ['Flag up — {player} caught marginally offside.', 'Offside against {player}, {team} attack breaks down.'],
+        templates: [
+          'Flag up — {player} caught marginally offside.',
+          'Offside against {player}, {team} attack breaks down.',
+        ],
       },
       {
         eventType: 'SAVE',
-        templates: ['Brilliant save to deny {player}!', 'Huge stop — {player} thought he had scored!'],
+        templates: [
+          'Brilliant save to deny {player}!',
+          'Huge stop — {player} thought he had scored!',
+        ],
       },
       {
         eventType: 'YELLOW_CARD',
-        templates: ['{player} goes into the book for a late tackle.', 'Booked — {player} caught the shirt.'],
+        templates: [
+          '{player} goes into the book for a late tackle.',
+          'Booked — {player} caught the shirt.',
+        ],
       },
       {
         eventType: 'BUILD_UP',
-        templates: ['{team} patiently working it through midfield.', '{player} turns and drives {team} forward.'],
+        templates: [
+          '{team} patiently working it through midfield.',
+          '{player} turns and drives {team} forward.',
+        ],
       },
     ],
   },
@@ -122,25 +140,41 @@ export const PLAYBOOKS: Record<string, Playbook> = {
         points: 1,
         weight: 10,
         eventType: 'FREE_THROW',
-        templates: ['{player} calmly sinks the free throw.', '{player} knocks down the freebie for {team}.'],
+        templates: [
+          '{player} calmly sinks the free throw.',
+          '{player} knocks down the freebie for {team}.',
+        ],
       },
     ],
     chatter: [
       {
         eventType: 'REBOUND',
-        templates: ['{player} crashes the boards for {team}.', '{player} rips down the rebound and outlets.'],
+        templates: [
+          '{player} crashes the boards for {team}.',
+          '{player} rips down the rebound and outlets.',
+        ],
       },
       {
         eventType: 'STEAL',
-        templates: ['{player} picks the pocket and springs a fast break!', '{player} jumps the passing lane — steal for {team}!'],
+        templates: [
+          '{player} picks the pocket and springs a fast break!',
+          '{player} jumps the passing lane — steal for {team}!',
+        ],
       },
       {
         eventType: 'BLOCK',
-        templates: ['Rejected! {player} swats it away.', '{player} meets it at the rim — denied!', 'Not in his house — {player} with the block!'],
+        templates: [
+          'Rejected! {player} swats it away.',
+          '{player} meets it at the rim — denied!',
+          'Not in his house — {player} with the block!',
+        ],
       },
       {
         eventType: 'TIMEOUT',
-        templates: ['{team} call a timeout to settle things down.', 'Timeout {team} — the coach wants a word.'],
+        templates: [
+          '{team} call a timeout to settle things down.',
+          'Timeout {team} — the coach wants a word.',
+        ],
       },
     ],
   },
@@ -152,26 +186,59 @@ export const PLAYBOOKS: Record<string, Playbook> = {
         points: 5,
         weight: 40,
         eventType: 'TRY',
-        templates: ['TRY! {player} crashes over the line for {team}!', '{player} dives in at the corner — try {team}!'],
+        templates: [
+          'TRY! {player} crashes over the line for {team}!',
+          '{player} dives in at the corner — try {team}!',
+        ],
       },
       {
         points: 3,
         weight: 35,
         eventType: 'PENALTY',
-        templates: ['{player} knocks over the penalty for {team}.', '{player} slots three points from the tee.'],
+        templates: [
+          '{player} knocks over the penalty for {team}.',
+          '{player} slots three points from the tee.',
+        ],
       },
       {
         points: 2,
         weight: 25,
         eventType: 'CONVERSION',
-        templates: ['{player} adds the extras with the conversion.', '{player} converts from out wide.'],
+        templates: [
+          '{player} adds the extras with the conversion.',
+          '{player} converts from out wide.',
+        ],
       },
     ],
     chatter: [
-      { eventType: 'SCRUM', templates: ['Scrum set on halfway, {team} feeding.', '{team} win the scrum against the head.'] },
-      { eventType: 'LINEOUT', templates: ['{player} claims the lineout cleanly.', 'Lineout to {team} — {player} leaps highest.'] },
-      { eventType: 'RUCK', templates: ['Quick ball at the ruck for {team}.', '{team} recycle sharply at the breakdown.'] },
-      { eventType: 'KNOCK_ON', templates: ['Knock-on from {player} — scrum the other way.', '{player} spills it forward under pressure.'] },
+      {
+        eventType: 'SCRUM',
+        templates: [
+          'Scrum set on halfway, {team} feeding.',
+          '{team} win the scrum against the head.',
+        ],
+      },
+      {
+        eventType: 'LINEOUT',
+        templates: [
+          '{player} claims the lineout cleanly.',
+          'Lineout to {team} — {player} leaps highest.',
+        ],
+      },
+      {
+        eventType: 'RUCK',
+        templates: [
+          'Quick ball at the ruck for {team}.',
+          '{team} recycle sharply at the breakdown.',
+        ],
+      },
+      {
+        eventType: 'KNOCK_ON',
+        templates: [
+          'Knock-on from {player} — scrum the other way.',
+          '{player} spills it forward under pressure.',
+        ],
+      },
     ],
   },
   cricket: {
@@ -182,37 +249,67 @@ export const PLAYBOOKS: Record<string, Playbook> = {
         points: 1,
         weight: 38,
         eventType: 'RUN',
-        templates: ['{player} nudges it into the gap for a single.', '{player} works it to leg for one.'],
+        templates: [
+          '{player} nudges it into the gap for a single.',
+          '{player} works it to leg for one.',
+        ],
       },
       {
         points: 4,
         weight: 25,
         eventType: 'FOUR',
-        templates: ['FOUR! {player} threads it through the covers.', 'Cracking shot — {player} finds the boundary!'],
+        templates: [
+          'FOUR! {player} threads it through the covers.',
+          'Cracking shot — {player} finds the boundary!',
+        ],
       },
       {
         points: 2,
         weight: 14,
         eventType: 'RUNS',
-        templates: ['Good running, {player} comes back for two.', '{player} places it into the gap for a couple.'],
+        templates: [
+          'Good running, {player} comes back for two.',
+          '{player} places it into the gap for a couple.',
+        ],
       },
       {
         points: 6,
         weight: 15,
         eventType: 'SIX',
-        templates: ['SIX! {player} launches it over the ropes!', 'Huge hit from {player} — into the stands!'],
+        templates: [
+          'SIX! {player} launches it over the ropes!',
+          'Huge hit from {player} — into the stands!',
+        ],
       },
       {
         points: 0,
         weight: 8,
         eventType: 'WICKET',
-        templates: ['WICKET! {player} departs — big blow for {team}.', 'Gone! {player} edges it behind.'],
+        templates: [
+          'WICKET! {player} departs — big blow for {team}.',
+          'Gone! {player} edges it behind.',
+        ],
       },
     ],
     chatter: [
-      { eventType: 'DOT_BALL', templates: ['Dot ball, tight line from the bowler.', 'Beaten! No run added for {team}.'] },
-      { eventType: 'APPEAL', templates: ['Huge appeal for LBW against {player} — not out!', 'Loud shout against {player}... umpire says no.'] },
-      { eventType: 'OVER_END', templates: ['End of the over, {team} rotating the strike well.', 'Over complete — {team} ticking along.'] },
+      {
+        eventType: 'DOT_BALL',
+        templates: ['Dot ball, tight line from the bowler.', 'Beaten! No run added for {team}.'],
+      },
+      {
+        eventType: 'APPEAL',
+        templates: [
+          'Huge appeal for LBW against {player} — not out!',
+          'Loud shout against {player}... umpire says no.',
+        ],
+      },
+      {
+        eventType: 'OVER_END',
+        templates: [
+          'End of the over, {team} rotating the strike well.',
+          'Over complete — {team} ticking along.',
+        ],
+      },
     ],
   },
   tennis: {
@@ -223,14 +320,33 @@ export const PLAYBOOKS: Record<string, Playbook> = {
         points: 1,
         weight: 1,
         eventType: 'GAME',
-        templates: ['Game {player} — holds serve to love.', 'Game {player}, held comfortably.', '{player} breaks serve!'],
+        templates: [
+          'Game {player} — holds serve to love.',
+          'Game {player}, held comfortably.',
+          '{player} breaks serve!',
+        ],
       },
     ],
     chatter: [
-      { eventType: 'ACE', templates: ['Ace down the T from {player}!', '{player} fires an ace out wide!'] },
-      { eventType: 'RALLY', templates: ['Terrific 20-shot rally, {player} edges it.', 'Brilliant baseline exchange won by {player}.'] },
-      { eventType: 'BREAK_POINT', templates: ['Break point for {player}...', '{player} earns a look at the break.'] },
-      { eventType: 'DOUBLE_FAULT', templates: ['Double fault from {player} — costly.', '{player} nets the second serve.'] },
+      {
+        eventType: 'ACE',
+        templates: ['Ace down the T from {player}!', '{player} fires an ace out wide!'],
+      },
+      {
+        eventType: 'RALLY',
+        templates: [
+          'Terrific 20-shot rally, {player} edges it.',
+          'Brilliant baseline exchange won by {player}.',
+        ],
+      },
+      {
+        eventType: 'BREAK_POINT',
+        templates: ['Break point for {player}...', '{player} earns a look at the break.'],
+      },
+      {
+        eventType: 'DOUBLE_FAULT',
+        templates: ['Double fault from {player} — costly.', '{player} nets the second serve.'],
+      },
     ],
   },
 };
@@ -246,17 +362,29 @@ export const FIXTURES: Fixture[] = [
   },
   {
     sport: 'football',
-    home: { name: 'Real Madrid', players: ['Bellingham', 'Vinícius Jr', 'Rodrygo', 'Valverde', 'Modrić'] },
-    away: { name: 'FC Barcelona', players: ['Lewandowski', 'Yamal', 'Pedri', 'Raphinha', 'Gündoğan'] },
+    home: {
+      name: 'Real Madrid',
+      players: ['Bellingham', 'Vinícius Jr', 'Rodrygo', 'Valverde', 'Modrić'],
+    },
+    away: {
+      name: 'FC Barcelona',
+      players: ['Lewandowski', 'Yamal', 'Pedri', 'Raphinha', 'Gündoğan'],
+    },
   },
   {
     sport: 'basketball',
-    home: { name: 'Los Angeles Lakers', players: ['LeBron James', 'Anthony Davis', 'Austin Reaves'] },
+    home: {
+      name: 'Los Angeles Lakers',
+      players: ['LeBron James', 'Anthony Davis', 'Austin Reaves'],
+    },
     away: { name: 'Boston Celtics', players: ['Jayson Tatum', 'Jaylen Brown', 'Derrick White'] },
   },
   {
     sport: 'basketball',
-    home: { name: 'Golden State Warriors', players: ['Stephen Curry', 'Klay Thompson', 'Draymond Green'] },
+    home: {
+      name: 'Golden State Warriors',
+      players: ['Stephen Curry', 'Klay Thompson', 'Draymond Green'],
+    },
     away: { name: 'Denver Nuggets', players: ['Nikola Jokić', 'Jamal Murray', 'Aaron Gordon'] },
   },
   {

@@ -48,6 +48,10 @@ RUN npm ci --omit=dev
 # We only ship dist/ — source files never enter this image.
 COPY --from=builder /app/dist ./dist
 
+# New Relic's config loader reads this relative to cwd at runtime — it isn't
+# compiled, so it has to be copied in explicitly.
+COPY newrelic.cjs ./
+
 # Create a non-root user.
 # Running as root inside a container is a security risk — this limits blast radius.
 RUN addgroup -S sportz && adduser -S sportz -G sportz
@@ -69,5 +73,6 @@ USER sportz
 # Document which port the app uses (does not publish it — that's docker run / compose).
 EXPOSE 8000
 
-# Start the compiled server.
-CMD ["node", "dist/index.js"]
+# Start the compiled server. bootstrap.js conditionally loads the New Relic
+# agent before anything else, then hands off to index.js.
+CMD ["node", "dist/bootstrap.js"]
