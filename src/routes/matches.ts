@@ -13,6 +13,7 @@ import { matches } from '../db/schema.js';
 import { db } from '../db/db.js';
 import { getMatchStatus } from '../utils/match-status.js';
 import { logger } from '../utils/logger.js';
+import { posthog } from '../posthog.js';
 import { desc, eq } from 'drizzle-orm';
 
 export const matchRouter = Router();
@@ -69,6 +70,12 @@ matchRouter.post('/', async (req: Request, res: Response) => {
       res.app.locals.broadcastMatchCreated(event);
     }
 
+    posthog?.capture({
+      distinctId: 'backend',
+      event: 'match_created',
+      properties: { matchId: event.id, sport: event.sport },
+    });
+
     res.status(201).json({ data: event });
   } catch (e) {
     logger.error('Failed to create match:', e);
@@ -107,6 +114,12 @@ matchRouter.patch('/:id/score', async (req: Request, res: Response) => {
     if (res.app.locals.broadcastScoreUpdate) {
       res.app.locals.broadcastScoreUpdate(updated);
     }
+
+    posthog?.capture({
+      distinctId: 'backend',
+      event: 'score_updated',
+      properties: { matchId: updated.id, homeScore, awayScore },
+    });
 
     res.json({ data: updated });
   } catch (e) {

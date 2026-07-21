@@ -85,3 +85,13 @@ services:
 
       - key: NEW_RELIC_APP_NAME
         value: sportz-backend
+
+      # POSTHOG_KEY: your PostHog project API key (phc_...). Left unset,
+      # posthog.ts stays null and every posthog?.capture() call is a no-op.
+      # Tracks business events (match_created, score_updated) — separate from
+      # New Relic's error/performance monitoring.
+      - key: POSTHOG_KEY
+        sync: false
+
+      - key: POSTHOG_HOST
+        value: https://us.i.posthog.com
